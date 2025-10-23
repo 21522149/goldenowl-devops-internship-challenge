@@ -37,7 +37,7 @@ jobs:
   # CI (BUILD) TRÊN MASTER BRANCH
   build-and-push:
     name: Build, Scan, and Push to ECR
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ github.sha }} 
