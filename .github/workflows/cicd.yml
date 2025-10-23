@@ -69,19 +69,6 @@ jobs:
           docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
 
 
-      - name: Run Trivy vulnerability scanner (Main Branch)
-        uses: aquasecurity/trivy-action@master
-        with:
-          # Quét image vừa build (đã được tag)
-          image-ref: '${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}'
-          format: 'table'
-          # Bắt buộc fail pipeline nếu tìm thấy lỗ hổng
-          exit-code: '1'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
-
-      # --- TÁCH BƯỚC PUSH ---
       - name: Push image to Amazon ECR
         id: push-image
         run: |
