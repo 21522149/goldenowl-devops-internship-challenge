@@ -59,9 +59,9 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}" >> $GITHUB_OUTPUT
+          docker build -t $ECR_REPOSITORY:${{ github.sha }} .
+          docker push $ECR_REPOSITORY:${{ github.sha }}
+          echo "image=$ECR_REPOSITORY:${{ github.sha }}" >> $GITHUB_OUTPUT
 
   # CD (DEPLOY) LÊN EC2 TỪ MASTER BRANCH
   deploy:
