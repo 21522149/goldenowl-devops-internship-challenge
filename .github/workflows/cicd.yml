@@ -35,12 +35,18 @@ jobs:
         run: cd src && npm test 
 
   # CI (BUILD) TRÊN MASTER BRANCH
+
   build-and-push:
-    name: Build and Push to ECR
+    name: Build, Scan, and Push to ECR
+  
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ github.sha }} 
+    env:
+      IMAGE_TAG: ${{ github.sha }}
+      IMAGE_NAME: ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -56,13 +62,32 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
+
+      - name: Build and tag image
         run: |
-          docker build -t $ECR_REPOSITORY .
-          docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:latest" >> $GITHUB_OUTPUT
+          docker build -t $IMAGE_NAME:$IMAGE_TAG .
+          docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
+
+
+      - name: Run Trivy vulnerability scanner (Main Branch)
+        uses: aquasecurity/trivy-action@master
+        with:
+          # Quét image vừa build (đã được tag)
+          image-ref: '${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}'
+          format: 'table'
+          # Bắt buộc fail pipeline nếu tìm thấy lỗ hổng
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      # --- TÁCH BƯỚC PUSH ---
+      - name: Push image to Amazon ECR
+        id: push-image
+        run: |
+          # Chỉ push khi bước quét Trivy ở trên thành công
+          docker push $IMAGE_NAME:$IMAGE_TAG
+          docker push $IMAGE_NAME:latest
 
   # CD (DEPLOY) LÊN EC2 TỪ MASTER BRANCH
   deploy:
