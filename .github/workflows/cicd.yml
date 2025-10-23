@@ -65,8 +65,8 @@ jobs:
         run: |
           docker build -t $IMAGE_NAME:$IMAGE_TAG .
           docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest
-      - name: Debug: Print Image Name
-        run: echo "Full Image Name is: $IMAGE_NAME"
+      - name: Debug
+        run: echo "Full Image Name is $IMAGE_NAME"
       # QUÉT TRIVY
       - name: Run Trivy vulnerability scanner (Master Branch)
         uses: aquasecurity/trivy-action@master
