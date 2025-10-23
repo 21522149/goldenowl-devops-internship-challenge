@@ -97,7 +97,7 @@ jobs:
             export IMAGE_NAME=891376958028.dkr.ecr.ap-southeast-2.amazonaws.com/go_challenge:latest
             
             # Login vào ECR (sử dụng IAM Role của EC2)
-            aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 891376958028.dkr.ecr.ap-southeast-2.amazonaws.com
+            aws ecr get-login-password --region ap-southeast-2 | sudo docker login --username AWS --password-stdin 891376958028.dkr.ecr.ap-southeast-2.amazonaws.com
             
             # Dừng và xóa container cũ (nếu có)
             sudo docker stop go_challenge || true
