@@ -40,9 +40,13 @@ jobs:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     outputs:
-
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      aws-region: ${{ env.AWS_REGION }}
       image_tag: ${{ github.sha }} 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -58,9 +62,9 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
-          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}"
+          docker build -t $ECR_REGISTRY\$ECR_REPOSITORY:${{ github.sha }} .
+          docker push $ECR_REGISTRY\$ECR_REPOSITORY:${{ github.sha }}
+          echo "::set-output name=image::$ECR_REGISTRY\$ECR_REPOSITORY:${{ github.sha }}"
 
   # CD (DEPLOY) LÊN EC2 TỪ MASTER BRANCH
   deploy:
@@ -79,16 +83,16 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
-            export IMAGE_NAME=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ needs.build-and-push.outputs.image_tag }}
+            export IMAGE_NAME=${{ env.ECR_REGISTRY }}\${{ env.ECR_REPOSITORY }}:${{ needs.build-and-push.outputs.image_tag }}
             
             # Login vào ECR (sử dụng IAM Role của EC2)
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
             
             # Dừng và xóa container cũ (nếu có)
-            docker stop my-node-app || true
-            docker rm my-node-app || true
-            
+            docker stop go_challenge || true
+            docker rm go_challenge || true
+
             # Kéo image mới về
             docker pull $IMAGE_NAME
             
-            docker run -d -p 80:3000 --name go-challenge $IMAGE_NAME
+            docker run -d -p 80:3000 --name go_challenge $IMAGE_NAME
